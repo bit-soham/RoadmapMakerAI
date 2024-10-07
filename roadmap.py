@@ -5,6 +5,7 @@ from llm import llm
 from gui import GUI
 from embedder import Embedding_Generator
 from prompts import Prompt_Generator, RoadMapGenerator
+from fpdf import FPDF
 
 root_directory = '/python_project/'
 
@@ -38,36 +39,13 @@ files_dict = {
 
 user_interface = GUI()
 student_data = user_interface.get_data()
-exit()
 
-from transformers import ( # type: ignore
-    DPRQuestionEncoder,
-    DPRContextEncoder,
-    DPRQuestionEncoderTokenizer,
-    DPRContextEncoderTokenizer,
-)
+
 
 # Load the question encoder and its corresponding tokenizer
-question_encoder = DPRQuestionEncoder.from_pretrained(
-    "facebook/dpr-question_encoder-single-nq-base"
-)
-question_tokenizer = DPRQuestionEncoderTokenizer.from_pretrained(
-    "facebook/dpr-question_encoder-single-nq-base"
-)
-
-# Load the context encoder and its corresponding tokenizer
-context_encoder = DPRContextEncoder.from_pretrained(
-    "facebook/dpr-ctx_encoder-single-nq-base"
-)
-context_tokenizer = DPRContextEncoderTokenizer.from_pretrained(
-    "facebook/dpr-ctx_encoder-single-nq-base"
-)
 
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-question_encoder = question_encoder.to(device)
-context_encoder = context_encoder.to(device)
-
 
 
 
@@ -85,23 +63,23 @@ def conv_input_to_text(student_data):
 student_input = conv_input_to_text(student_data)
 
 
-student_input = """
-                Lakshya Tanwar is a 12th-grade student from Bhopal, India, born on 5th July 2008. His gender is male.
-                 He studies under the CBSE board in the PCM stream, with 80% in 10th grade and 82% in 11th grade.
-                 Preparing for IIT-JEE, Lakshya aims to pursue Computer Science at IIT Bombay.
-                 He is catching up on Chemistry due to missed lessons and finds both Chemistry and Physics challenging.
-                 His long-term goal is to become a Software Engineer at Google, with interests in
-                 AI, web development, sports (Football, Basketball, Chess), community service, and entrepreneurship.
-                Lakshya’s father earns INR 500,000 annually. Lakshya has skills in communication, marketing, Python,
-                and web development. His extracurriculars include founding "Needy Binders" (providing food to the needy),
-                interning as a Marketing Intern at "Cross The Skylimits," and co-founding "Nutrifido" (dog care and medication).
-                He also aspires to launch AI-related startups and contribute to Ed-tech and animal welfare.
-                """
+# student_input = """
+#                 Lakshya Tanwar is a 12th-grade student from Bhopal, India, born on 5th July 2008. His gender is male.
+#                  He studies under the CBSE board in the PCM stream, with 80% in 10th grade and 82% in 11th grade.
+#                  Preparing for IIT-JEE, Lakshya aims to pursue Computer Science at IIT Bombay.
+#                  He is catching up on Chemistry due to missed lessons and finds both Chemistry and Physics challenging.
+#                  His long-term goal is to become a Software Engineer at Google, with interests in
+#                  AI, web development, sports (Football, Basketball, Chess), community service, and entrepreneurship.
+#                 Lakshya’s father earns INR 500,000 annually. Lakshya has skills in communication, marketing, Python,
+#                 and web development. His extracurriculars include founding "Needy Binders" (providing food to the needy),
+#                 interning as a Marketing Intern at "Cross The Skylimits," and co-founding "Nutrifido" (dog care and medication).
+#                 He also aspires to launch AI-related startups and contribute to Ed-tech and animal welfare.
+#                 """
 month = 4
 year = '2023'
 
 
-embedder = Embedding_Generator(files_dict, context_encoder, context_tokenizer, question_encoder, question_tokenizer)
+embedder = Embedding_Generator(files_dict)
 
 for file_names in files_dict.keys():
     print(file_names, embedder.context_embeddings[file_names].shape)
@@ -132,28 +110,22 @@ roadmap = Roadmap_Generator.generate_roadmap()
 
 
 print(f"{roadmap=}")
-
-reader = PdfReader('Roadmap.pdf')
-writer = PdfWriter()
-
-# Add all pages from the existing PDF to the writer
-for page in reader.pages:
-    writer.add_page(page)
-
-# Create a new page for the content you want to append
+# Create a PDF file
 pdf = FPDF()
 pdf.add_page()
 
-# Add a title to the new page
+# Add a title
 pdf.set_font("Arial", 'B', size=20)  # Set font for title (bold, larger size)
-pdf.cell(0, 10, 'Suggested Roadmap', ln=True, align='C')  # Center align the title
+pdf.cell(0, 10, 'Student Information', ln=True, align='C')  # Left align the title
 pdf.ln(10)  # Add a line break after the title
 
 # Set fonts for the content
 pdf.set_font("Arial", size=12)
 
-# Write the new content directly to the PDF
-for line in content_to_append.split('\n'):
+# Parse the data and write it to the PDF in the desired format
+data = roadmap.split('\n')
+
+for line in data:
     if ':' in line:
         # Separate label and value
         label, value = line.split(':', 1)
@@ -166,19 +138,55 @@ for line in content_to_append.split('\n'):
         pdf.set_font("Arial", size=12)
         pdf.cell(0, 10, f"{value.strip()}", ln=1)  # Remaining width for the value cell
 
-# Save the new page to a temporary file
-temp_pdf_file = "temp_page.pdf"
-pdf.output(temp_pdf_file)
+# Save the PDF with the name 'Roadmap.pdf'
+pdf.output("Roadmap.pdf")
 
-# Read the temporary file to append it
-new_reader = PdfReader(temp_pdf_file)
-for page in new_reader.pages:
-    writer.add_page(page)
+# reader = PdfReader('Roadmap.pdf')
+# writer = PdfWriter()
 
-# Write out the combined PDF
-with open(existing_pdf_file, "wb") as output_pdf:
-    writer.write(output_pdf)
+# # Add all pages from the existing PDF to the writer
+# for page in reader.pages:
+#     writer.add_page(page)
 
-# Clean up the temporary file
-import os
-os.remove(temp_pdf_file)
+# # Create a new page for the content you want to append
+# pdf = FPDF()
+# pdf.add_page()
+
+# # Add a title to the new page
+# pdf.set_font("Arial", 'B', size=20)  # Set font for title (bold, larger size)
+# pdf.cell(0, 10, 'Suggested Roadmap', ln=True, align='C')  # Center align the title
+# pdf.ln(10)  # Add a line break after the title
+
+# # Set fonts for the content
+# pdf.set_font("Arial", size=12)
+
+# # Write the new content directly to the PDF
+# for line in content_to_append.split('\n'):
+#     if ':' in line:
+#         # Separate label and value
+#         label, value = line.split(':', 1)
+
+#         # Write the label in bold
+#         pdf.set_font("Arial", style='B', size=12)
+#         pdf.cell(50, 10, f"{label.strip()}:", ln=0)  # Set a fixed width for the label cell
+        
+#         # Write the value in regular font
+#         pdf.set_font("Arial", size=12)
+#         pdf.cell(0, 10, f"{value.strip()}", ln=1)  # Remaining width for the value cell
+
+# # Save the new page to a temporary file
+# temp_pdf_file = "temp_page.pdf"
+# pdf.output(temp_pdf_file)
+
+# # Read the temporary file to append it
+# new_reader = PdfReader(temp_pdf_file)
+# for page in new_reader.pages:
+#     writer.add_page(page)
+
+# # Write out the combined PDF
+# with open(existing_pdf_file, "wb") as output_pdf:
+#     writer.write(output_pdf)
+
+# # Clean up the temporary file
+# import os
+# os.remove(temp_pdf_file)

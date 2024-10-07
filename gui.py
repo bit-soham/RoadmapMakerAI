@@ -265,38 +265,10 @@ class GUI(ctk.CTk):
         self.mainloop()
         print(self.formatted_data)
 
-        # Create a PDF file
-        pdf = FPDF()
-        pdf.add_page()
-
-        # Add a title
-        pdf.set_font("Arial", 'B', size=20)  # Set font for title (bold, larger size)
-        pdf.cell(0, 10, 'Student Information', ln=True, align='C')  # Left align the title
-        pdf.ln(10)  # Add a line break after the title
-
-        # Set fonts for the content
-        pdf.set_font("Arial", size=12)
-
-        # Parse the data and write it to the PDF in the desired format
-        data = self.formatted_data.split('\n')
-        
-        for line in data:
-            if ':' in line:
-                # Separate label and value
-                label, value = line.split(':', 1)
-
-                # Write the label in bold
-                pdf.set_font("Arial", style='B', size=12)
-                pdf.cell(50, 10, f"{label.strip()}:", ln=0)  # Set a fixed width for the label cell
-                
-                # Write the value in regular font
-                pdf.set_font("Arial", size=12)
-                pdf.cell(0, 10, f"{value.strip()}", ln=1)  # Remaining width for the value cell
-
-        # Save the PDF with the name 'Roadmap.pdf'
-        pdf.output("Roadmap.pdf")
 
         # After the main loop ends, return the formatted data
+        
+        
         return self.formatted_data
 
 

@@ -35,20 +35,23 @@ def llm(query, prompt, max_tokens=500, split=False):
     ]
 
     response = ''
-    try:
-        messages = client.chat_completion(
-            messages=messages,
-            max_tokens=max_tokens,
-            stream=True  # Stream is handled internally
-        )
+    i = 0
+    while i < 100:
+        try:
+            messages = client.chat_completion(
+                messages=messages,
+                max_tokens=max_tokens,
+                stream=True  # Stream is handled internally
+            )
 
-        for message in messages:
-            if "choices" in message and message.choices[0].delta:
-                response += message.choices[0].delta.get("content", "")
-
-    except Exception as e:
-        logging.error(f"Error occurred during chat completion: {str(e)}")
-
+            for message in messages:
+                if "choices" in message and message.choices[0].delta:
+                    response += message.choices[0].delta.get("content", "")
+            print("response:", response)
+            break
+        except Exception as e:
+            logging.error(f"Error occurred during chat completion: {str(e)}")
+            i += 1
     # Handle the response, assuming the first line is what you need
     if split:
         response = response.split("\n")[0]

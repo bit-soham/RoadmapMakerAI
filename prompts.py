@@ -240,10 +240,11 @@ class RoadMapGenerator:
                 April
 
                 '
-                You must genarate the roadmap for each month that should include what events along with the event's website he should attend what aspects of his life he should take care of and other imp things he can do that month on his own according to the events
+                You must generate the roadmap for each month that should include what events along with the event's website he should attend what aspects of his life he should take care of and other imp things he can do that month on his own according to the events
                 he is attending next month preparing for upcoming events and his goals.
                 You must Whenever you are mentioning an event mention the event's website also for each month
-                YOU must Do this for {self.no_of_events} months using the data on the events we provided
+                YOU must Do this for {self.no_of_events} months  using the data on the events we provided 
+                The student should know what specificaly what to do for each month 
                 """
         response = llm(user_prompt, system_prompt, max_tokens=10000)
         return response
