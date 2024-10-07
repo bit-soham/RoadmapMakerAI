@@ -1,3 +1,8 @@
+""" 
+    Here are  we are putting all the things together (GUI, LLM model, embedder, prompts created and generating the actual
+roadmap for the student which will then added to the the roadmap.pdf file
+"""
+
 from PyPDF2 import PdfReader, PdfWriter
 from fpdf import FPDF
 import pandas as pd # type: ignore
@@ -7,10 +12,11 @@ from llm import llm
 from gui import GUI
 from embedder import Embedding_Generator
 from prompts import Prompt_Generator, RoadMapGenerator
+from fpdf import FPDF
 
 root_directory = '/python_project/'
 
-# List all files and directories in the root directory
+# List of all files and directories in the root directory
 for root, dirs, files in os.walk(root_directory):
     for file in files:
         print(os.path.join(root, file))
@@ -38,38 +44,14 @@ files_dict = {
     "Summer Camps" : pd.read_csv(f"{existing_path}summer_camps.csv")
 }
 
+# initiationg the gui
 user_interface = GUI()
+# getting the data from the gui
 student_data = user_interface.get_data()
 
 
-from transformers import ( # type: ignore
-    DPRQuestionEncoder,
-    DPRContextEncoder,
-    DPRQuestionEncoderTokenizer,
-    DPRContextEncoderTokenizer,
-)
-
-# Load the question encoder and its corresponding tokenizer
-question_encoder = DPRQuestionEncoder.from_pretrained(
-    "facebook/dpr-question_encoder-single-nq-base"
-)
-question_tokenizer = DPRQuestionEncoderTokenizer.from_pretrained(
-    "facebook/dpr-question_encoder-single-nq-base"
-)
-
-# Load the context encoder and its corresponding tokenizer
-context_encoder = DPRContextEncoder.from_pretrained(
-    "facebook/dpr-ctx_encoder-single-nq-base"
-)
-context_tokenizer = DPRContextEncoderTokenizer.from_pretrained(
-    "facebook/dpr-ctx_encoder-single-nq-base"
-)
-
-
+# checking the availablity 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-question_encoder = question_encoder.to(device)
-context_encoder = context_encoder.to(device)
-
 
 
 
@@ -86,101 +68,91 @@ def conv_input_to_text(student_data):
 
 student_input = conv_input_to_text(student_data)
 
-
-student_input = """
-                Lakshya Tanwar is a 12th-grade student from Bhopal, India, born on 5th July 2008. His gender is male.
-                 He studies under the CBSE board in the PCM stream, with 80% in 10th grade and 82% in 11th grade.
-                 Preparing for IIT-JEE, Lakshya aims to pursue Computer Science at IIT Bombay.
-                 He is catching up on Chemistry due to missed lessons and finds both Chemistry and Physics challenging.
-                 His long-term goal is to become a Software Engineer at Google, with interests in
-                 AI, web development, sports (Football, Basketball, Chess), community service, and entrepreneurship.
-                Lakshya's father earns INR 500,000 annually. Lakshya has skills in communication, marketing, Python,
-                and web development. His extracurriculars include founding "Needy Binders" (providing food to the needy),
-                interning as a Marketing Intern at "Cross The Skylimits," and co-founding "Nutrifido" (dog care and medication).
-                He also aspires to launch AI-related startups and contribute to Ed-tech and animal welfare.
-                """
+# start month and year
 month = 4
 year = '2023'
 
-
-embedder = Embedding_Generator(files_dict, context_encoder, context_tokenizer, question_encoder, question_tokenizer)
+# generating the embedding for the data files
+embedder = Embedding_Generator(files_dict)
 
 for file_names in files_dict.keys():
     print(file_names, embedder.context_embeddings[file_names].shape)
 
 t = embedder.filenames_embeddings
-t.size()
-
-# torch.save(embedder.context_embeddings, 'context_embeddings.pth')
 
 
-
+# getting the prompt 
 prompt_generator = Prompt_Generator(embedder, student_input, files_dict, month, year)
 prompt = prompt_generator.generate_prompt(12)
 
-# TODO Make a prompt to generate the prompt for the events and make
-
-# prompt = prompt_generator.generate_prompt(12)
-
-
+# getting the number of events done
 no_of_events = prompt_generator.No_of_events
 
-print(prompt)
-
-
-
+# initializing the RoadMapGenerator
 Roadmap_Generator = RoadMapGenerator(prompt, student_input, no_of_events)
+# getting roadmap from the generator
 roadmap = Roadmap_Generator.generate_roadmap()
 
+print(roadmap)
 
-print(f"{roadmap=}")
+#gettinng the roadmap text to append in the pdf
 content_to_append = roadmap
-
 existing_pdf_file = 'Roadmap.pdf'
 
+# read from the existing Roadmap.pdf
 reader = PdfReader(existing_pdf_file)
+# initialize the writer
 writer = PdfWriter()
 
 # Add all pages from the existing PDF to the writer
 for page in reader.pages:
     writer.add_page(page)
 
-# Create a new page for the content you want to append
+# Create a new page for the content to append
 pdf = FPDF()
 pdf.add_page()
 
-# Add a title to the new page
-pdf.set_font("Arial", 'B', size=20)  # Set font for title (bold, larger size)
-pdf.cell(0, 10, 'Suggested Roadmap', ln=True, align='C')  # Center align the title
-pdf.ln(10)  # Add a line break after the title
+# Add a title
+pdf.set_font("Arial", 'B', size=20)  
+pdf.cell(0, 10, 'Student Roadmap', ln=True, align='C')  
+# Add a line break after the title
+pdf.ln(10)  
 
 # Set fonts for the content
 pdf.set_font("Arial", size=12)
 
-# Write the new content directly to the PDF
-for line in content_to_append.split('\n'):
+# Parse the data and write it to the PDF in the desired format
+data = roadmap.split('\n')
+
+for line in data:
     if ':' in line:
-        # Separate label and value
+        # Split into label and value
         label, value = line.split(':', 1)
+        
+        # Dynamically calculate the width for the label based on its length
+        label_width = pdf.get_string_width(f"{label.strip()}:") + 2  # Add some padding
 
         # Write the label in bold
         pdf.set_font("Arial", style='B', size=12)
-        pdf.cell(50, 10, f"{label.strip()}:", ln=0)  # Set a fixed width for the label cell
+        pdf.cell(label_width, 10, f"{label.strip()}:", ln=0)  # Dynamically set label width
         
         # Write the value in regular font
         pdf.set_font("Arial", size=12)
-        pdf.cell(0, 10, f"{value.strip()}", ln=1)  # Remaining width for the value cell
+        pdf.cell(0, 10, f"{value.strip()}", ln=1)  # Move to next line after value
+    else:
+        # If no colon, write the line as-is
+        pdf.cell(190, 10, line, ln=1)
 
-# Save the new page to a temporary file
+# generator the temperory pdf file to write the roadmap info
 temp_pdf_file = "temp_page.pdf"
 pdf.output(temp_pdf_file)
 
-# Read the temporary file to append it
+# Read the temporary file to append it 
 new_reader = PdfReader(temp_pdf_file)
 for page in new_reader.pages:
     writer.add_page(page)
 
-# Write out the combined PDF
+# Write out the combined PDF [student info that he provided and the Roadmap for him]
 with open(existing_pdf_file, "wb") as output_pdf:
     writer.write(output_pdf)
 

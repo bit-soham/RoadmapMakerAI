@@ -1,4 +1,4 @@
-Full Name:    Soham 
+Full Name:    Soham T. Umbare 
 Gender:   Male
 Country:  Bharat
 City: Tembhurni
@@ -10,7 +10,7 @@ Educational Board:    Maharashtra Board
 Stream:   PCM
 Entrance Exam Preparation:    JEE
 Study Abroad: Yes
-Father's Name:    Tananji
+Father's Name:    Tanaji
 Mother's Name:    Nandini
 Father's Occupation:  Teacher
 Mother's Occupation:  Teacher
@@ -19,9 +19,9 @@ Future Goal:  engineer
 Interest Field Areas: reasearch
 Sports:   Hollyball
 CS Interests: coding
-Community Service:    -
+Community Service:    tree plantation
 Entrepreneurship Interests:   research
-Skills:   coding learning
-Activity1:    bullshi
-Activity2:    nonelsjo
-Activity3:    dffkrjigvnkn
+Skills:   coding, webdev, ai, ml, RAG
+Activity1:    Made the brainlink website for question answering and notes sharing
+Activity2:    made various AI porject 
+Activity3:    Made the Roadmap maker ai from the student input using RAG techniques

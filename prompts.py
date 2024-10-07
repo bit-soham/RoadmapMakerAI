@@ -1,6 +1,16 @@
+""" 
+    In this file we are writing the prompts to pass them into the llm model to retrive the relavant data from the data
+    we have in the desired format. Here we first create the prompt for getting the most relavant feild for the student
+    considering the info provided by the student as well as the month of the roadmap and the previous activities that 
+    student have done in the earilier month in the roadmap 
+"""
+
 from llm import llm
-import numpy as np # type: ignore
-from sklearn.metrics.pairwise import cosine_similarity # type: ignore
+import numpy as np 
+from sklearn.metrics.pairwise import cosine_similarity 
+
+EPSILON_DECAY = 0.9
+EPSILON_INCREMENT = 0.4
 
 class Prompt_Generator:
     def __init__(self, embedder,  student_input, files_dict, month, year):
@@ -43,9 +53,13 @@ class Prompt_Generator:
         self.best_events = []
 
     def query_embd(self, query):
+        """
+        Embeds the given query using the provided model.
+        """
         query_inputs = self.embedder.question_tokenizer(query, return_tensors="pt", max_length=512, truncation=True).to(self.device)
         query_embedding = self.embedder.question_encoder(**query_inputs).pooler_output
         return query_embedding
+
 
     def increment_month(self):
         if self.months[self.current_month] == 'December':
@@ -55,7 +69,11 @@ class Prompt_Generator:
             self.current_month += 1
         self.current_date = f'{self.months[self.current_month]} {self.year}'
 
+
     def similarity_check(self, query, context_embeddings):
+        """
+        Computes cosine similarity between query and context embeddings.
+        """
         similarities = cosine_similarity(
             query.detach().cpu().numpy(),
             context_embeddings.detach().cpu().numpy()
@@ -80,7 +98,7 @@ class Prompt_Generator:
                         Do not say anything else.
                         """
             print("Same: ", end='')
-            epsilon -= 0.9 * epsilon
+            epsilon -= EPSILON_DECAY * epsilon
         else:
             print("Diff: ", end='')
             original_query_for_file = f"""
@@ -94,11 +112,16 @@ class Prompt_Generator:
                         and according to his interests and skills and long-term goals. Your answer should only contain the sector name and nothing else.
                         Do not say anything else.
                         """
-            epsilon += 0.4 * epsilon
+            epsilon += EPSILON_INCREMENT * epsilon
         prompt = """
         You are a knowledgeable professor who is very knowledgeable on matters of students' careers. You will help your student choose the best sector for them while deciding their roadmap. You will just tell the student the name of the sector most suitable for them.
         """
-        response = llm(original_query_for_file, prompt)
+        try:
+            response = llm(original_query_for_file, prompt)
+        except Exception as e:
+            print(f"Error in generating LLM response: {e}")
+            return None
+
         response_embedding = self.query_embd(response)
 
         # print("This is the response we get:- ",response)
@@ -179,6 +202,8 @@ class RoadMapGenerator:
         self.student_input = student_input
         self.no_of_events = no_of_events
 
+    
+    # explaining required format for the roadmap for the LLM model in detail
     def generate_roadmap(self):
         system_prompt = """
                 You are a professional Career and health advisor and you care for students mental strengh but will push them to their limits to achieve there goals
@@ -240,10 +265,11 @@ class RoadMapGenerator:
                 April
 
                 '
-                You must genarate the roadmap for each month that should include what events along with the event's website he should attend what aspects of his life he should take care of and other imp things he can do that month on his own according to the events
+                You must generate the roadmap for each month that should include what events along with the event's website he should attend what aspects of his life he should take care of and other imp things he can do that month on his own according to the events
                 he is attending next month preparing for upcoming events and his goals.
                 You must Whenever you are mentioning an event mention the event's website also for each month
-                YOU must Do this for {self.no_of_events} months using the data on the events we provided
+                YOU must Do this for {self.no_of_events} months  using the data on the events we provided 
+                The student should know what specificaly what to do for each month 
                 """
         response = llm(user_prompt, system_prompt, max_tokens=10000)
         return response
