@@ -16,7 +16,7 @@ class Embedding_Generator:
         self.question_encoder = question_encoder
         self.question_tokenizer = question_tokenizer
         
-        directory = '/content/'
+        directory = '/Data/file_embeddings/'
         filename1 = 'context_embeddings.pth'
         filename2 = 'context_embeddings.pkl'
 

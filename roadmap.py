@@ -1,3 +1,5 @@
+from PyPDF2 import PdfReader, PdfWriter
+from fpdf import FPDF
 import pandas as pd # type: ignore
 import torch # type: ignore
 import os
@@ -38,7 +40,7 @@ files_dict = {
 
 user_interface = GUI()
 student_data = user_interface.get_data()
-exit()
+
 
 from transformers import ( # type: ignore
     DPRQuestionEncoder,
@@ -92,7 +94,7 @@ student_input = """
                  He is catching up on Chemistry due to missed lessons and finds both Chemistry and Physics challenging.
                  His long-term goal is to become a Software Engineer at Google, with interests in
                  AI, web development, sports (Football, Basketball, Chess), community service, and entrepreneurship.
-                Lakshya’s father earns INR 500,000 annually. Lakshya has skills in communication, marketing, Python,
+                Lakshya's father earns INR 500,000 annually. Lakshya has skills in communication, marketing, Python,
                 and web development. His extracurriculars include founding "Needy Binders" (providing food to the needy),
                 interning as a Marketing Intern at "Cross The Skylimits," and co-founding "Nutrifido" (dog care and medication).
                 He also aspires to launch AI-related startups and contribute to Ed-tech and animal welfare.
@@ -109,7 +111,7 @@ for file_names in files_dict.keys():
 t = embedder.filenames_embeddings
 t.size()
 
-torch.save(embedder.context_embeddings, 'context_embeddings.pth')
+# torch.save(embedder.context_embeddings, 'context_embeddings.pth')
 
 
 
@@ -132,8 +134,11 @@ roadmap = Roadmap_Generator.generate_roadmap()
 
 
 print(f"{roadmap=}")
+content_to_append = roadmap
 
-reader = PdfReader('Roadmap.pdf')
+existing_pdf_file = 'Roadmap.pdf'
+
+reader = PdfReader(existing_pdf_file)
 writer = PdfWriter()
 
 # Add all pages from the existing PDF to the writer
@@ -179,6 +184,9 @@ for page in new_reader.pages:
 with open(existing_pdf_file, "wb") as output_pdf:
     writer.write(output_pdf)
 
+
 # Clean up the temporary file
-import os
-os.remove(temp_pdf_file)
+try:
+    os.remove(temp_pdf_file)
+except OSError as e:
+    print(f"Error removing file: {e}")
