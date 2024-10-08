@@ -1,6 +1,7 @@
 import json
 import logging
 from huggingface_hub import InferenceClient 
+token = "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"
 
 # SetTING up logging globally
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(message)s')
@@ -34,7 +35,7 @@ class LLM:
 # Initialize the client
 client = InferenceClient(
     "mistralai/Mistral-7B-Instruct-v0.3",
-    token="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",
+    token=token,
 )
 
 def llm(query, prompt, max_tokens=500, split=False):
