@@ -217,7 +217,24 @@ class GUI(ctk.CTk):
 
             # Add formatted data to the PDF
             for line in self.formatted_data.split("\n"):
-                pdf.cell(200, 10, txt=line, ln=True)
+                if ':' in line:
+                    # Split into label and value
+                    label, value = line.split(':', 1)
+                    
+                    # Dynamically calculate the width for the label based on its length
+                    label_width = pdf.get_string_width(f"{label.strip()}:") + 8 
+
+                    # Write the label in bold
+                    pdf.set_font("Arial", style='B', size=12)
+                    pdf.cell(label_width, 10, f"{label.strip()}:", ln=0)  # Dynamically set label width
+                    
+                    # Write the value in regular font
+                    pdf.set_font("Arial", size=12)
+                    pdf.cell(0, 10, f"{value.strip()}", ln=1)  # Move to next line after value
+                else:
+                    # If no colon, write the line as-is
+                    pdf.cell(190, 10, line, ln=1)
+
 
             # Save the PDF to a file
             pdf.output("Student_Input.pdf")
