@@ -36,7 +36,7 @@ class GUI(ctk.CTk):
         self.notebook.pack(expand=True, fill="both")
 
         # Add tabs for each form section
-        for tab_name in ["Personal Details", "Academics", "Family Details", "Interests", "Activities"]:
+        for tab_name in ["Personal Details", "Academics", "Family Details", "Interests", "Activities and Goals"]:
             self.notebook.add(tab_name)
 
     def create_label_and_entry(self, parent, text, entry_var_name):
@@ -59,8 +59,8 @@ class GUI(ctk.CTk):
         self.create_label_and_entry(page_frame, "Full Name:", "full_name")
         self.create_label_and_combo_box(page_frame, "Gender:", ["Male", "Female", "Other"], "gender")
         self.create_label_and_entry(page_frame, "Date of Birth (DD-MM-YYYY):", "dob")
-        self.create_label_and_entry(page_frame, "Country:", "country")
         self.create_label_and_entry(page_frame, "City:", "city")
+        self.create_label_and_entry(page_frame, "Country:", "country")
 
     def create_page2(self):
         """Create the Academics form (Page 2)."""
@@ -88,17 +88,18 @@ class GUI(ctk.CTk):
         self.create_label_and_entry(page_frame, "What do you want to become in the future?", "future_goal")
         self.create_label_and_entry(page_frame, "Interest Field Areas:", "interest_areas")
         self.create_label_and_entry(page_frame, "Sports:", "sports")
-        self.create_label_and_entry(page_frame, "CS Interests:", "cs_interests")
         self.create_label_and_entry(page_frame, "Community Service that you have offered:", "community_service")
         self.create_label_and_entry(page_frame, "Entrepreneurship Interests:", "entrepreneurship_interests")
 
     def create_page5(self):
         """Create the Activities form (Page 5)."""
-        page_frame = self.create_page_frame("Activities")
+        page_frame = self.create_page_frame("Activities and Goals")
         self.create_label_and_entry(page_frame, "What skills do you have?", "skills")
         self.create_label_and_entry(page_frame, "Activity 1:", "activity1")
         self.create_label_and_entry(page_frame, "Activity 2:", "activity2")
         self.create_label_and_entry(page_frame, "Activity 3:", "activity3")
+        self.create_label_and_entry(page_frame, "Short-Term Goals", "short_term_goals")
+        self.create_label_and_entry(page_frame, "Long-Term Goals", "long_term_goals")
 
         # Submit button and warning text box
         submit_button = ctk.CTkButton(page_frame, text="Submit", command=self.submit_form, width=150, height=30)
@@ -139,13 +140,14 @@ class GUI(ctk.CTk):
                 self.future_goal.get(),
                 self.interest_areas.get(),
                 self.sports.get(),
-                self.cs_interests.get(),
                 self.community_service.get(),
                 self.entrepreneurship_interests.get(),
                 self.skills.get(),
                 self.activity1.get(),
                 self.activity2.get(),
                 self.activity3.get(),
+                self.short_term_goals.get(),
+                self.long_term_goals.get(),
             ]):
                 self.message_box.configure(state='normal')  # Enable the text box
                 self.message_box.delete(1.0, tk.END)  # Clear previous messages
@@ -190,7 +192,6 @@ class GUI(ctk.CTk):
                 f"Future Goal: {self.future_goal.get()}\n"
                 f"Interest Field Areas: {self.interest_areas.get()}\n"
                 f"Sports: {self.sports.get()}\n"
-                f"CS Interests: {self.cs_interests.get()}\n"
                 f"Community Service: {self.community_service.get()}\n"
                 f"Entrepreneurship Interests: {self.entrepreneurship_interests.get()}\n"
             )
@@ -200,6 +201,8 @@ class GUI(ctk.CTk):
                 f"Activity 1: {self.activity1.get()}\n"
                 f"Activity 2: {self.activity2.get()}\n"
                 f"Activity 3: {self.activity3.get()}\n"
+                f"Short-term Goals: {self.short_term_goals.get()}\n"
+                f"Long-term Goals: {self.long_term_goals.get()}\n"
             )
 
             # Combine all sections
@@ -217,7 +220,7 @@ class GUI(ctk.CTk):
                 pdf.cell(200, 10, txt=line, ln=True)
 
             # Save the PDF to a file
-            pdf.output("Roadmap.pdf")
+            pdf.output("Student_Input.pdf")
 
         except Exception as e:
             print(f"Error: {e}")
