@@ -3,6 +3,7 @@
 roadmap for the student which will then added to the the roadmap.pdf file
 """
 
+import textwrap
 from PyPDF2 import PdfReader, PdfWriter
 from fpdf import FPDF
 import pandas as pd # type: ignore
@@ -124,24 +125,33 @@ pdf.set_font("Arial", size=12)
 # Parse the data and write it to the PDF in the desired format
 data = roadmap.split('\n')
 
-for line in data:
-    if ':' in line:
-        # Split into label and value
-        label, value = line.split(':', 1)
-        
-        # Dynamically calculate the width for the label based on its length
-        label_width = pdf.get_string_width(f"{label.strip()}:") + 2  # Add some padding
+# Function to add text to the PDF with word wrapping and preserving newlines
+def add_wrapped_text(pdf, text, width, is_month=False):
+    if is_month:
+        pdf.set_font("Arial", style='B', size=12)  # Set bold font for month
+        pdf.ln(5)  # Larger margin above
+    wrapped_text = textwrap.fill(text, width=width)
+    pdf.multi_cell(0, 10, wrapped_text)
+    if is_month:
+        pdf.ln(5)  # Larger margin below
+        pdf.set_font("Arial", size=12)  # Reset to regular font
 
-        # Write the label in bold
-        pdf.set_font("Arial", style='B', size=12)
-        pdf.cell(label_width, 10, f"{label.strip()}:", ln=0)  # Dynamically set label width
-        
-        # Write the value in regular font
-        pdf.set_font("Arial", size=12)
-        pdf.cell(0, 10, f"{value.strip()}", ln=1)  # Move to next line after value
+# list of month names
+months = ["January", "February", "March", "April", "May", "June", 
+          "July", "August", "September", "October", "November", "December",
+          "january", "february", "march", "april", "may", "june", 
+          "july", "august", "september", "october", "november", "december"]
+
+# Loop through each line in data_lines, wrap and add it to the PDF
+for line in data:
+    if line.strip():  # Non-empty lines
+        # Check if the line starts with a month name
+        if any(month in line for month in months):
+            add_wrapped_text(pdf, line, 103, is_month=True)
+        else:
+            add_wrapped_text(pdf, line, 103, is_month=False)
     else:
-        # If no colon, write the line as-is
-        pdf.cell(190, 10, line, ln=1)
+        pdf.ln(0)  # Add a small line break for empty lines (paragraph breaks)
 
 # generator the temperory pdf file to write the roadmap info
 temp_pdf_file = "temp_page.pdf"
